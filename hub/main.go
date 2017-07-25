@@ -2,9 +2,9 @@ package main
 
 import (
 	"flag"
+	"github.com/oscp/openshift-monitoring/hub/server"
 	"log"
 	"net/http"
-	"github.com/oscp/openshift-monitoring/hub/server"
 )
 
 var uiAddr = flag.String("UI_ADDR", "localhost:8080", "http service endpoint")
@@ -16,12 +16,12 @@ var etcdCertPath = flag.String("ETCD_CERT_PATH", "/etc/etcd/", "Path of alternat
 
 func main() {
 	flag.Parse()
-	log.Println("hub waiting for daemons on ", *hubAddr)
-	log.Println("ui server waiting for websocket on ", *uiAddr)
-	log.Println("master api urls are ", *masterApiUrls)
-	log.Println("daemons public url is ", *daemonPublicUrl)
-	log.Println("etcd ips are ", *etcdIps)
-	log.Println("etcdCertPath is ", *etcdCertPath)
+	log.Println("hub waiting for daemons on", *hubAddr)
+	log.Println("ui server waiting for websocket on", *uiAddr)
+	log.Println("master api urls are", *masterApiUrls)
+	log.Println("daemons public url is", *daemonPublicUrl)
+	log.Println("etcd ips are", *etcdIps)
+	log.Println("etcdCertPath is", *etcdCertPath)
 
 	// Start hub rcp server
 	hub := server.NewHub(*hubAddr, *masterApiUrls, *daemonPublicUrl, *etcdIps, *etcdCertPath)
@@ -36,4 +36,3 @@ func main() {
 
 	log.Fatal(http.ListenAndServe(*uiAddr, nil))
 }
-

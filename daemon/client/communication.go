@@ -1,10 +1,10 @@
 package client
 
 import (
+	"github.com/cenkalti/rpc2"
 	"github.com/oscp/openshift-monitoring/models"
 	"log"
 	"os"
-	"github.com/cenkalti/rpc2"
 )
 
 func registerOnHub(h string, dc *models.DaemonClient) {
@@ -29,21 +29,24 @@ func unregisterOnHub(c *rpc2.Client) {
 	c.Close()
 }
 
-func handleCheckStarted(dc *models.DaemonClient) {
+func HandleCheckStarted(dc *models.DaemonClient) {
 	dc.Daemon.StartedChecks++
 	updateDaemonOnHub(dc)
 }
 
-func handleCheckFinished(dc *models.DaemonClient, ok bool) {
-	if (ok) {
+func HandleCheckFinished(dc *models.DaemonClient, err error, t string) {
+	// Update check counts
+	if err == nil {
+		dc.ToHub <- models.CheckResult{Type: t, IsOk: true, Message: ""}
 		dc.Daemon.SuccessfulChecks++
 	} else {
+		dc.ToHub <- models.CheckResult{Type: t, IsOk: false, Message: err.Error()}
 		dc.Daemon.FailedChecks++
 	}
 	updateDaemonOnHub(dc)
 }
 
-func handleChecksStopped(dc *models.DaemonClient) {
+func HandleChecksStopped(dc *models.DaemonClient) {
 	log.Println("stopped checks")
 	updateDaemonOnHub(dc)
 }
@@ -58,7 +61,7 @@ func updateDaemonOnHub(dc *models.DaemonClient) {
 
 func handleCheckResultToHub(dc *models.DaemonClient) {
 	for {
-		var r models.CheckResult = <- dc.ToHub
+		var r models.CheckResult = <-dc.ToHub
 		r.Hostname = dc.Daemon.Hostname
 
 		if err := dc.Client.Call("checkResult", r, nil); err != nil {
@@ -66,5 +69,3 @@ func handleCheckResultToHub(dc *models.DaemonClient) {
 		}
 	}
 }
-
-
